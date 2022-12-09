@@ -10,6 +10,12 @@
     "lint": "eslint . --ext .js,.jsx,.ts,.tsx"
   },
   "dependencies": {
+    "@apollo/client": "^3.7.2",
+    "@apollo/react-hooks": "^4.0.0",
+    "apollo-boost": "^0.4.9",
+    "apollo-link-error": "^1.1.13",
+    "deprecated-react-native-prop-types": "^3.0.1",
+    "graphql": "^16.6.0",
     "react": "18.1.0",
     "react-native": "0.70.6",
     "react-native-android-notification-listener": "^5.0.0",

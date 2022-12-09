@@ -1,8 +1,8 @@
 import React from 'react';
 import { AppRegistry, StyleSheet, Text, TouchableOpacity, Linking, View } from 'react-native';
 
-// import QRCodeScanner from 'react-native-qrcode-scanner';
-// import { RNCamera } from 'react-native-camera';
+import QRCodeScanner from 'react-native-qrcode-scanner';
+import { RNCamera } from 'react-native-camera';
 
 type Props = {
 	onSuccess: (event: any) => void;
@@ -10,9 +10,9 @@ type Props = {
 export function Scanner(props: Props) {
 	return (
 		<View>
-			{/* <QRCodeScanner
+			<QRCodeScanner
 				onRead={props.onSuccess}
-				flashMode={RNCamera.Constants.FlashMode.torch}
+				// flashMode={RNCamera.Constants.FlashMode.torch}
 				topContent={
 					<Text style={styles.centerText}>
 						Go to <Text style={styles.textBold}>wikipedia.org/wiki/QR_code</Text> on your computer and scan
@@ -24,7 +24,7 @@ export function Scanner(props: Props) {
 						<Text style={styles.buttonText}>OK. Got it!</Text>
 					</TouchableOpacity>
 				}
-			/> */}
+			/>
 		</View>
 	);
 }

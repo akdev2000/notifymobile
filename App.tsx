@@ -1,32 +1,21 @@
-/**
- * Sample React Native App
- * https://github.com/facebook/react-native
- *
- * Generated with the TypeScript template
- * https://github.com/react-native-community/react-native-template-typescript
- *
- * @format
- */
+import React from 'react';
+import {SafeAreaView, StyleSheet, useColorScheme} from 'react-native';
 
-import React, {type PropsWithChildren} from 'react';
-import {
-  SafeAreaView,
-  ScrollView,
-  StatusBar,
-  StyleSheet,
-  Text,
-  useColorScheme,
-  View,
-} from 'react-native';
-
-import {
-  Colors,
-  DebugInstructions,
-  Header,
-  LearnMoreLinks,
-  ReloadInstructions,
-} from 'react-native/Libraries/NewAppScreen';
+import {Colors} from 'react-native/Libraries/NewAppScreen';
 import Index from './app/Index';
+
+import {ApolloClient, ApolloProvider, InMemoryCache, gql, createHttpLink} from '@apollo/client';
+import {api_url} from './app/config';
+import { ApolloLink } from 'apollo-boost'
+import { onError } from 'apollo-link-error'
+
+const errorLink = onError(({ graphQLErrors }) => {
+  if (graphQLErrors) graphQLErrors.map(({ message }) => console.log(message))
+})
+
+const httpLink = createHttpLink({
+  uri: api_url,
+});
 
 
 const App = () => {
@@ -36,30 +25,29 @@ const App = () => {
     backgroundColor: isDarkMode ? Colors.darker : Colors.lighter,
   };
 
+  const client = new ApolloClient({
+    // uri: api_url,
+    cache: new InMemoryCache(),
+    link: httpLink
+  });
+
+  client.query({
+    query: gql`
+      query test {
+        test
+      }
+    `
+  }).then((res) => {
+    console.log("root res : " ,res)
+  }).catch((err) => console.log("Root er", err))
+
   return (
     <SafeAreaView style={backgroundStyle}>
-      <Index />
+      <ApolloProvider client={client}>
+        <Index />
+      </ApolloProvider>
     </SafeAreaView>
   );
 };
-
-const styles = StyleSheet.create({
-  sectionContainer: {
-    marginTop: 32,
-    paddingHorizontal: 24,
-  },
-  sectionTitle: {
-    fontSize: 24,
-    fontWeight: '600',
-  },
-  sectionDescription: {
-    marginTop: 8,
-    fontSize: 18,
-    fontWeight: '400',
-  },
-  highlight: {
-    fontWeight: '700',
-  },
-});
 
 export default App;
