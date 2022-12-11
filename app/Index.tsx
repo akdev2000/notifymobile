@@ -1,4 +1,4 @@
-import React, {Component, useEffect} from 'react';
+import React, {Component, useEffect, useState} from 'react';
 import {Text, View} from 'react-native';
 import RNAndroidNotificationListener, {
   RNAndroidNotificationListenerPermissionStatus,
@@ -6,9 +6,11 @@ import RNAndroidNotificationListener, {
 import {startListener} from './Notification';
 import {Scanner} from './Scanner';
 import {gql, useMutation, useQuery} from '@apollo/client';
+import DeviceInfo from 'react-native-device-info';
+
 const CREATE_SESSION = gql`
-  mutation add_session($userid: String!, $meta_data: String!) {
-    add_session(input: {userid: $userid, meta_data: $meta_data})
+  mutation add_session($input: SessionInputProps!) {
+    add_session(input: $input)
   }
 `;
 
@@ -18,8 +20,55 @@ const test = gql`
   }
 `;
 
+const CREATE_NOTIFICATION = gql`
+  mutation create_notification($input: NotificatoinInput!) {
+    create_notification(input: $input) {
+      user_id
+    }
+  }
+`;
+
+type InputType = {
+  input: {
+    user_id: number;
+    source: string;
+    title: string;
+    mainTitle: string;
+    notificationData: string;
+    notificationReceivedTime: Date;
+  };
+};
+
+type NotificationOutputType = {
+  id: number;
+  user_id: number;
+  source: string;
+  title: string;
+  mainTitle: string;
+  notificationData: string;
+  notificationReceivedTime: Date;
+  createdAt: string;
+  updatedAt: string;
+};
+
+type SessionInputProps = {
+  input: {
+    device_info: String;
+    device_name: String;
+    device_id: String;
+    sessionId: string;
+  };
+};
 export default function Index() {
-  const [createSession, createSessionResponse] = useMutation(CREATE_SESSION);
+  const [createSession, createSessionResponse] = useMutation<
+    any,
+    SessionInputProps
+  >(CREATE_SESSION);
+  const [notification, setNotification] = useState<any>({});
+  const [createNotification, createNotificationResponse] = useMutation<
+    NotificationOutputType,
+    InputType
+  >(CREATE_NOTIFICATION);
   const testQuery = useQuery(test);
   useEffect(() => {
     (async () => {
@@ -28,7 +77,6 @@ export default function Index() {
       if (permission != 'authorized') {
         RNAndroidNotificationListener.requestPermission();
       }
-      startListener();
       console.log(
         'Status : ',
         await RNAndroidNotificationListener.getPermissionStatus(),
@@ -39,24 +87,82 @@ export default function Index() {
   }, []);
 
   useEffect(() => {
+    console.log('Notification Received', typeof notification);
+
+    if (typeof notification == 'string') {
+      let notify: any = JSON.parse(notification);
+      (async () => {
+        console.log(
+          'test : ',
+          JSON.stringify({
+            input: {
+              user_id: 1,
+              mainTitle: notify?.titleBig,
+              notificationData: JSON.stringify(notify),
+              title: notify.title,
+              source: notify?.app,
+              notificationReceivedTime: new Date(notify?.time * 1000),
+            },
+          }),
+        );
+        await createNotification({
+          variables: {
+            input: {
+              user_id: 1,
+              mainTitle: notify?.titleBig,
+              notificationData: JSON.stringify(notify),
+              title: notify.title,
+              source: notify?.app,
+              notificationReceivedTime: new Date(),
+            },
+          },
+        })
+          .then(res => {
+            console.log('Respose : ', res);
+          })
+          .catch(err => {
+            console.log('Error:', err);
+          });
+      })();
+      console.log('Notification Received', notify?.app);
+    }
+  }, [notification]);
+
+  useEffect(() => {
     if (testQuery.data) {
       console.log('testQuery.data', testQuery.data);
     }
   }, [testQuery.data]);
+
+  useEffect(() => {
+    (async () => {
+      const deviceInfo = await DeviceInfo.getUniqueId();
+      console.log('Device Info : ', deviceInfo);
+    })();
+  }, []);
+
   return (
     <View style={{display: 'flex', alignItems: 'center', marginTop: 10}}>
       <Text>Go to http://localhost:3000 and Scan the QQ Code</Text>
       <Scanner
-        onSuccess={event => {
+        onSuccess={async event => {
           console.log('Uniwue String: ', event.data);
-
+          // const deviceInfo = DeviceInfo;
           createSession({
             variables: {
-              userid: event.data,
-              meta_data: event,
+              input: {
+                device_id: DeviceInfo.getDeviceId(),
+                device_info: JSON.stringify({
+                  device_id: DeviceInfo.getDeviceId(),
+                  device: DeviceInfo.getDevice(),
+                }),
+                device_name: await DeviceInfo.getDeviceName(),
+                sessionId: event.data,
+              },
             },
           })
             .then(res => {
+              startListener(setNotification);
               console.log('Response: ', res);
             })
             .catch(err => {

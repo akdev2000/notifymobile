@@ -20,6 +20,7 @@
     "react-native": "0.70.6",
     "react-native-android-notification-listener": "^5.0.0",
     "react-native-camera": "^4.2.1",
+    "react-native-device-info": "^10.3.0",
     "react-native-qrcode-scanner": "^1.5.5"
   },
   "devDependencies": {
