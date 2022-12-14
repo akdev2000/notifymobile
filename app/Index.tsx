@@ -1,22 +1,21 @@
-import React, {Component, useEffect, useState} from 'react';
-import {Text, View} from 'react-native';
-import RNAndroidNotificationListener, {
-  RNAndroidNotificationListenerPermissionStatus,
-} from 'react-native-android-notification-listener';
-import {startListener} from './Notification';
-import {Scanner} from './Scanner';
-import {gql, useMutation, useQuery} from '@apollo/client';
+import { gql, useMutation, useQuery, useSubscription } from '@apollo/client';
+import React, { useEffect, useState } from 'react';
+import { Text, View } from 'react-native';
+import RNAndroidNotificationListener from 'react-native-android-notification-listener';
 import DeviceInfo from 'react-native-device-info';
+import { Scanner } from './Scanner';
 
 const CREATE_SESSION = gql`
-  mutation add_session($input: SessionInputProps!) {
+  mutation add_session($input: InputProps!) {
     add_session(input: $input)
   }
 `;
 
 const test = gql`
   query test {
-    test
+    test {
+      device_name
+    }
   }
 `;
 
@@ -24,6 +23,20 @@ const CREATE_NOTIFICATION = gql`
   mutation create_notification($input: NotificatoinInput!) {
     create_notification(input: $input) {
       user_id
+    }
+  }
+`;
+
+const NOTIFICATION_RECEIVED_LISTENER = gql`
+  subscription receivedNotification {
+    receivedNotification {
+      device_id
+      device_name
+      id
+      Notification {
+        id
+        mainTitle
+      }
     }
   }
 `;
@@ -69,6 +82,7 @@ export default function Index() {
     NotificationOutputType,
     InputType
   >(CREATE_NOTIFICATION);
+  const notificationListener = useSubscription(NOTIFICATION_RECEIVED_LISTENER);
   const testQuery = useQuery(test);
   useEffect(() => {
     (async () => {
@@ -82,12 +96,10 @@ export default function Index() {
         await RNAndroidNotificationListener.getPermissionStatus(),
       );
     })();
-
-    console.log('testQuery.data', testQuery.error);
   }, []);
 
   useEffect(() => {
-    console.log('Notification Received', typeof notification);
+    console.log('Notification Received', notification);
 
     if (typeof notification == 'string') {
       let notify: any = JSON.parse(notification);
@@ -135,6 +147,12 @@ export default function Index() {
   }, [testQuery.data]);
 
   useEffect(() => {
+    if (testQuery.error) {
+      console.log('testQuery.error', testQuery.error);
+    }
+  }, [testQuery.error]);
+
+  useEffect(() => {
     (async () => {
       const deviceInfo = await DeviceInfo.getUniqueId();
       console.log('Device Info : ', deviceInfo);
@@ -146,7 +164,15 @@ export default function Index() {
       <Text>Go to http://localhost:3000 and Scan the QQ Code</Text>
       <Scanner
         onSuccess={async event => {
-          console.log('Uniwue String: ', event.data);
+          console.log('Uniwue String: ', {
+            device_id: DeviceInfo.getDeviceId(),
+            device_info: JSON.stringify({
+              device_id: DeviceInfo.getDeviceId(),
+              device: DeviceInfo.getDevice(),
+            }),
+            device_name: await DeviceInfo.getDeviceName(),
+            sessionId: event.data,
+          });
           // const deviceInfo = DeviceInfo;
           createSession({
             variables: {
@@ -162,8 +188,9 @@ export default function Index() {
             },
           })
             .then(res => {
-              startListener(setNotification);
+              // startListener(setNotification);
               console.log('Response: ', res);
+              // console.log("notificationListener : " ,notificationListener?.data)
             })
             .catch(err => {
               console.log('err', err);
