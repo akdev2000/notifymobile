@@ -3,7 +3,7 @@ import React, { useEffect, useState } from 'react';
 import { Text, View } from 'react-native';
 import RNAndroidNotificationListener from 'react-native-android-notification-listener';
 import DeviceInfo from 'react-native-device-info';
-import { Scanner } from './Scanner';
+import { Scanner } from '../components/Scanner';
 
 const CREATE_SESSION = gql`
   mutation add_session($input: InputProps!) {
@@ -72,7 +72,7 @@ type SessionInputProps = {
     sessionId: string;
   };
 };
-export default function Index() {
+export default function Scan() {
   const [createSession, createSessionResponse] = useMutation<
     any,
     SessionInputProps

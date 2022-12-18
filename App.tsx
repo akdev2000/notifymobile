@@ -2,7 +2,7 @@ import React from 'react';
 import {SafeAreaView, StyleSheet, useColorScheme} from 'react-native';
 
 import {Colors} from 'react-native/Libraries/NewAppScreen';
-import Index from './app/Index';
+import {Home, Scan} from './app/screens';
 
 import {
   ApolloClient,
@@ -17,6 +17,8 @@ import {GraphQLWsLink} from '@apollo/client/link/subscriptions';
 import {onError} from 'apollo-link-error';
 import {createClient} from 'graphql-ws';
 import {getMainDefinition} from '@apollo/client/utilities';
+import {NavigationContainer} from '@react-navigation/native';
+import {createNativeStackNavigator} from '@react-navigation/native-stack';
 
 const errorLink = onError(({graphQLErrors, networkError}) => {
   if (graphQLErrors) graphQLErrors.map(({message}) => console.log(message));
@@ -45,6 +47,8 @@ const splitLink = split(
   httpLink,
 );
 
+const Stack = createNativeStackNavigator();
+
 const App = () => {
   const isDarkMode = useColorScheme() === 'dark';
 
@@ -69,11 +73,14 @@ const App = () => {
   // }).catch((err) => console.log("Root er", err))
 
   return (
-    <SafeAreaView style={backgroundStyle}>
-      <ApolloProvider client={client}>
-        <Index />
-      </ApolloProvider>
-    </SafeAreaView>
+    <ApolloProvider client={client}>
+      <NavigationContainer>
+        <Stack.Navigator initialRouteName="Home">
+          <Stack.Screen name="Home" component={Home} />
+          <Stack.Screen name="Scan" component={Scan} />
+        </Stack.Navigator>
+      </NavigationContainer>
+    </ApolloProvider>
   );
 };
 
