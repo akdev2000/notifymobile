@@ -4,10 +4,15 @@ import { Text, View } from 'react-native';
 import RNAndroidNotificationListener from 'react-native-android-notification-listener';
 import DeviceInfo from 'react-native-device-info';
 import { Scanner } from '../components/Scanner';
+import { startListener } from '../Notification';
+import { setAsyncData } from '../utils/helpers';
 
 const CREATE_SESSION = gql`
   mutation add_session($input: InputProps!) {
-    add_session(input: $input)
+    add_session(input: $input) {
+      id
+      session_id
+    }
   }
 `;
 
@@ -43,7 +48,7 @@ const NOTIFICATION_RECEIVED_LISTENER = gql`
 
 type InputType = {
   input: {
-    user_id: number;
+    device_id: string;
     source: string;
     title: string;
     mainTitle: string;
@@ -72,7 +77,7 @@ type SessionInputProps = {
     sessionId: string;
   };
 };
-export default function Scan() {
+export default function Scan(props:any) {
   const [createSession, createSessionResponse] = useMutation<
     any,
     SessionInputProps
@@ -99,7 +104,13 @@ export default function Scan() {
   }, []);
 
   useEffect(() => {
-    console.log('Notification Received', notification);
+    if(notificationListener.data) {
+      console.log("notificationListener.data : " , notificationListener.data)
+    }
+  },[notificationListener.data])
+
+  useEffect(() => {
+    // console.log('Notification Received', notification);
 
     if (typeof notification == 'string') {
       let notify: any = JSON.parse(notification);
@@ -108,11 +119,11 @@ export default function Scan() {
           'test : ',
           JSON.stringify({
             input: {
-              user_id: 1,
-              mainTitle: notify?.titleBig,
-              notificationData: JSON.stringify(notify),
+              device_id: DeviceInfo.getUniqueId(),
+              // mainTitle: notify?.titleBig,
+              // notificationData: JSON.stringify(notify),
               title: notify.title,
-              source: notify?.app,
+              // source: notify?.app,
               notificationReceivedTime: new Date(notify?.time * 1000),
             },
           }),
@@ -120,7 +131,7 @@ export default function Scan() {
         await createNotification({
           variables: {
             input: {
-              user_id: 1,
+              device_id: await DeviceInfo.getUniqueId() ,
               mainTitle: notify?.titleBig,
               notificationData: JSON.stringify(notify),
               title: notify.title,
@@ -165,9 +176,9 @@ export default function Scan() {
       <Scanner
         onSuccess={async event => {
           console.log('Uniwue String: ', {
-            device_id: DeviceInfo.getDeviceId(),
+            device_id: await DeviceInfo.getUniqueId(),
             device_info: JSON.stringify({
-              device_id: DeviceInfo.getDeviceId(),
+              device_id: DeviceInfo.getUniqueId(),
               device: DeviceInfo.getDevice(),
             }),
             device_name: await DeviceInfo.getDeviceName(),
@@ -177,9 +188,9 @@ export default function Scan() {
           createSession({
             variables: {
               input: {
-                device_id: DeviceInfo.getDeviceId(),
+                device_id: await DeviceInfo.getUniqueId(),
                 device_info: JSON.stringify({
-                  device_id: DeviceInfo.getDeviceId(),
+                  device_id: DeviceInfo.getUniqueId(),
                   device: DeviceInfo.getDevice(),
                 }),
                 device_name: await DeviceInfo.getDeviceName(),
@@ -187,10 +198,13 @@ export default function Scan() {
               },
             },
           })
-            .then(res => {
-              // startListener(setNotification);
+            .then(async res => {
               console.log('Response: ', res);
-              // console.log("notificationListener : " ,notificationListener?.data)
+              console.log("notificationListener : " ,notificationListener?.data)
+              await setAsyncData("device_id" , await DeviceInfo.getUniqueId());
+              await setAsyncData("session_ids" , JSON.stringify([event.data]));
+              startListener(setNotification);
+              props.navigation.navigate("Dashboard")
             })
             .catch(err => {
               console.log('err', err);

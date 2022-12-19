@@ -2,7 +2,7 @@ import React from 'react';
 import {SafeAreaView, StyleSheet, useColorScheme} from 'react-native';
 
 import {Colors} from 'react-native/Libraries/NewAppScreen';
-import {Home, Scan} from './app/screens';
+import {Dashboard, Home, Scan} from './app/screens';
 
 import {
   ApolloClient,
@@ -11,6 +11,9 @@ import {
   gql,
   createHttpLink,
   split,
+  from,
+  HttpLink,
+  ApolloLink,
 } from '@apollo/client';
 import {api_url} from './app/config';
 import {GraphQLWsLink} from '@apollo/client/link/subscriptions';
@@ -20,12 +23,21 @@ import {getMainDefinition} from '@apollo/client/utilities';
 import {NavigationContainer} from '@react-navigation/native';
 import {createNativeStackNavigator} from '@react-navigation/native-stack';
 
-const errorLink = onError(({graphQLErrors, networkError}) => {
-  if (graphQLErrors) graphQLErrors.map(({message}) => console.log(message));
-  if (networkError) console.log(`[Network error]: ${networkError}`);
-});
+const errorLink: any = onError(
+  ({graphQLErrors, networkError, operation, forward}) => {
+    if (graphQLErrors) {
+      console.log("[Graphql Errors] : " , graphQLErrors)
+    }
 
-const httpLink = createHttpLink({
+    // To retry on network errors, we recommend the RetryLink
+    // instead of the onError link. This just logs the error.
+    if (networkError) {
+      console.log(`[Network error]: ${networkError}`);
+    }
+  },
+);
+
+const httpLink = new HttpLink({
   uri: api_url,
 });
 
@@ -35,17 +47,17 @@ const wsLink = new GraphQLWsLink(
   }),
 );
 
-const splitLink = split(
-  ({query}) => {
-    const definition = getMainDefinition(query);
-    return (
-      definition.kind === 'OperationDefinition' &&
-      definition.operation === 'subscription'
-    );
-  },
-  wsLink,
-  httpLink,
-);
+const authLink = new ApolloLink((operation, forward) => {
+  // const token = getToken()
+  // if (token) {
+  //   operation.setContext({
+  //     headers: {
+  //       Authorization: `Bearer ${token}`,
+  //     },
+  //   })
+  // }
+  return forward(operation);
+});
 
 const Stack = createNativeStackNavigator();
 
@@ -56,10 +68,12 @@ const App = () => {
     backgroundColor: isDarkMode ? Colors.darker : Colors.lighter,
   };
 
+  const link: any = errorLink.concat(authLink.concat(httpLink));
   const client = new ApolloClient({
     // uri: api_url,
     cache: new InMemoryCache(),
-    link: httpLink.concat(wsLink),
+    link: from([errorLink,httpLink,wsLink]),
+    // link,
   });
 
   // client.query({
@@ -78,6 +92,7 @@ const App = () => {
         <Stack.Navigator initialRouteName="Home">
           <Stack.Screen name="Home" component={Home} />
           <Stack.Screen name="Scan" component={Scan} />
+          <Stack.Screen name="Dashboard" component={Dashboard} />
         </Stack.Navigator>
       </NavigationContainer>
     </ApolloProvider>
