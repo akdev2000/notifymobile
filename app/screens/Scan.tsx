@@ -1,6 +1,6 @@
 import { gql, useMutation, useQuery, useSubscription } from '@apollo/client';
 import React, { useEffect, useState } from 'react';
-import { Text, View } from 'react-native';
+import { Text, ToastAndroid, View } from 'react-native';
 import RNAndroidNotificationListener from 'react-native-android-notification-listener';
 import DeviceInfo from 'react-native-device-info';
 import { Scanner } from '../components/Scanner';
@@ -108,6 +108,12 @@ export default function Scan(props:any) {
       console.log("notificationListener.data : " , notificationListener.data)
     }
   },[notificationListener.data])
+
+  useEffect(() => {
+    if(createSessionResponse?.error) {
+      ToastAndroid.show(createSessionResponse?.error?.message, ToastAndroid.LONG)
+    }
+  },[createSessionResponse?.error])
 
   useEffect(() => {
     // console.log('Notification Received', notification);

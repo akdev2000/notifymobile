@@ -7,3 +7,8 @@ export async function getAsyncDataByKey(keyName: string) {
 export async function setAsyncData(keyName: string, value: string) {
   await EncryptedStorage.setItem(keyName, value);
 }
+
+
+export async function logout() {
+  await EncryptedStorage.clear();
+}
