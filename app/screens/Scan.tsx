@@ -1,11 +1,16 @@
-import { gql, useMutation, useQuery, useSubscription } from '@apollo/client';
-import React, { useEffect, useState } from 'react';
-import { Text, ToastAndroid, View } from 'react-native';
+import {gql, useMutation, useQuery, useSubscription} from '@apollo/client';
+import React, {useEffect, useState} from 'react';
+import {Text, ToastAndroid, View} from 'react-native';
 import RNAndroidNotificationListener from 'react-native-android-notification-listener';
 import DeviceInfo from 'react-native-device-info';
-import { Scanner } from '../components/Scanner';
-import { startListener } from '../Notification';
-import { setAsyncData } from '../utils/helpers';
+import {Scanner} from '../components/Scanner';
+import {startListener} from '../Notification';
+import {
+  getAsyncDataByKey,
+  LOCAL_DEVICE_ID,
+  LOCAL_SESSION_IDS,
+  setAsyncData,
+} from '../utils/helpers';
 
 const CREATE_SESSION = gql`
   mutation add_session($input: InputProps!) {
@@ -77,7 +82,7 @@ type SessionInputProps = {
     sessionId: string;
   };
 };
-export default function Scan(props:any) {
+export default function Scan(props: any) {
   const [createSession, createSessionResponse] = useMutation<
     any,
     SessionInputProps
@@ -104,16 +109,19 @@ export default function Scan(props:any) {
   }, []);
 
   useEffect(() => {
-    if(notificationListener.data) {
-      console.log("notificationListener.data : " , notificationListener.data)
+    if (notificationListener.data) {
+      console.log('notificationListener.data : ', notificationListener.data);
     }
-  },[notificationListener.data])
+  }, [notificationListener.data]);
 
   useEffect(() => {
-    if(createSessionResponse?.error) {
-      ToastAndroid.show(createSessionResponse?.error?.message, ToastAndroid.LONG)
+    if (createSessionResponse?.error) {
+      ToastAndroid.show(
+        createSessionResponse?.error?.message,
+        ToastAndroid.LONG,
+      );
     }
-  },[createSessionResponse?.error])
+  }, [createSessionResponse?.error]);
 
   useEffect(() => {
     // console.log('Notification Received', notification);
@@ -137,7 +145,7 @@ export default function Scan(props:any) {
         await createNotification({
           variables: {
             input: {
-              device_id: await DeviceInfo.getUniqueId() ,
+              device_id: await DeviceInfo.getUniqueId(),
               mainTitle: notify?.titleBig,
               notificationData: JSON.stringify(notify),
               title: notify.title,
@@ -206,11 +214,25 @@ export default function Scan(props:any) {
           })
             .then(async res => {
               console.log('Response: ', res);
-              console.log("notificationListener : " ,notificationListener?.data)
-              await setAsyncData("device_id" , await DeviceInfo.getUniqueId());
-              await setAsyncData("session_ids" , JSON.stringify([event.data]));
+              console.log(
+                'notificationListener : ',
+                notificationListener?.data,
+              );
+              await setAsyncData(
+                LOCAL_DEVICE_ID,
+                await DeviceInfo.getUniqueId(),
+              );
+              const existingSessions =
+                (await getAsyncDataByKey(LOCAL_SESSION_IDS)) || '[]';
+              const existingSessionArray: string[] =
+                JSON.parse(existingSessions);
+              existingSessionArray.push(event.data);
+              await setAsyncData(
+                LOCAL_SESSION_IDS,
+                JSON.stringify(existingSessionArray),
+              );
               startListener(setNotification);
-              props.navigation.navigate("Dashboard")
+              props.navigation.navigate('Dashboard');
             })
             .catch(err => {
               console.log('err', err);

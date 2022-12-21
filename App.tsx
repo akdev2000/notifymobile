@@ -1,5 +1,5 @@
 import React from 'react';
-import {SafeAreaView, StyleSheet, useColorScheme} from 'react-native';
+import {SafeAreaView, StyleSheet, useColorScheme, View} from 'react-native';
 
 import {Colors} from 'react-native/Libraries/NewAppScreen';
 import {Dashboard, Home, Scan} from './app/screens';
@@ -22,11 +22,12 @@ import {createClient} from 'graphql-ws';
 import {getMainDefinition} from '@apollo/client/utilities';
 import {NavigationContainer} from '@react-navigation/native';
 import {createNativeStackNavigator} from '@react-navigation/native-stack';
+import Icon from 'react-native-vector-icons/MaterialIcons';
 
 const errorLink: any = onError(
   ({graphQLErrors, networkError, operation, forward}) => {
     if (graphQLErrors) {
-      console.log("[Graphql Errors] : " , graphQLErrors)
+      console.log('[Graphql Errors] : ', graphQLErrors);
     }
 
     // To retry on network errors, we recommend the RetryLink
@@ -72,7 +73,7 @@ const App = () => {
   const client = new ApolloClient({
     // uri: api_url,
     cache: new InMemoryCache(),
-    link: from([errorLink,httpLink,wsLink]),
+    link: from([errorLink, httpLink, wsLink]),
     // link,
   });
 
@@ -92,7 +93,30 @@ const App = () => {
         <Stack.Navigator initialRouteName="Home">
           <Stack.Screen name="Home" component={Home} />
           <Stack.Screen name="Scan" component={Scan} />
-          <Stack.Screen name="Dashboard" component={Dashboard} />
+          <Stack.Screen
+            name="Dashboard"
+            component={Dashboard}
+            options={{
+              headerBackVisible: false,
+              // headerRight: () => (
+              //   <View>
+              //     <Icon.Button
+              //       name="qr-code-scanner"
+              //       color={'black'}
+              //       iconStyle={{fontSize: 40}}
+              //       style={{
+              //         alignItems: 'center',
+              //         justifyContent: 'center',
+              //       }}
+              //       onPress={() => {
+              //         console.log('Pressed');
+              //         // props.navigation.navigate('Scan');
+              //       }}
+              //       backgroundColor="#ffffff"></Icon.Button>
+              //   </View>
+              // ),
+            }}
+          />
         </Stack.Navigator>
       </NavigationContainer>
     </ApolloProvider>

@@ -12,3 +12,6 @@ export async function setAsyncData(keyName: string, value: string) {
 export async function logout() {
   await EncryptedStorage.clear();
 }
+
+export const LOCAL_DEVICE_ID = "device_id";
+export const LOCAL_SESSION_IDS = "session_ids"; 
