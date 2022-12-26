@@ -22,6 +22,7 @@ export function startListener(setNotification: (notification: any) => void) {
 
   AppRegistry.registerHeadlessTask(
     RNAndroidNotificationListenerHeadlessJsName,
-    () => headlessNotificationListener,
+    () => headlessNotificationListener
   );
+
 }

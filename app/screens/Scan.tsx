@@ -37,20 +37,6 @@ const CREATE_NOTIFICATION = gql`
   }
 `;
 
-const NOTIFICATION_RECEIVED_LISTENER = gql`
-  subscription receivedNotification {
-    receivedNotification {
-      device_id
-      device_name
-      id
-      Notification {
-        id
-        mainTitle
-      }
-    }
-  }
-`;
-
 type InputType = {
   input: {
     device_id: string;
@@ -92,7 +78,6 @@ export default function Scan(props: any) {
     NotificationOutputType,
     InputType
   >(CREATE_NOTIFICATION);
-  const notificationListener = useSubscription(NOTIFICATION_RECEIVED_LISTENER);
   const testQuery = useQuery(test);
   useEffect(() => {
     (async () => {
@@ -108,11 +93,11 @@ export default function Scan(props: any) {
     })();
   }, []);
 
-  useEffect(() => {
-    if (notificationListener.data) {
-      console.log('notificationListener.data : ', notificationListener.data);
-    }
-  }, [notificationListener.data]);
+  // useEffect(() => {
+  //   if (notificationListener.data) {
+  //     console.log('notificationListener.data : ', notificationListener.data);
+  //   }
+  // }, [notificationListener.data]);
 
   useEffect(() => {
     if (createSessionResponse?.error) {
@@ -214,10 +199,10 @@ export default function Scan(props: any) {
           })
             .then(async res => {
               console.log('Response: ', res);
-              console.log(
-                'notificationListener : ',
-                notificationListener?.data,
-              );
+              // console.log(
+              //   'notificationListener : ',
+              //   notificationListener?.data,
+              // );
               await setAsyncData(
                 LOCAL_DEVICE_ID,
                 await DeviceInfo.getUniqueId(),

@@ -1,4 +1,4 @@
-import {View, Text} from 'react-native';
+import {View, Text, SafeAreaView, StyleSheet} from 'react-native';
 import React, {useEffect} from 'react';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import {
@@ -8,16 +8,34 @@ import {
   logout,
 } from '../utils/helpers';
 import {gql} from 'apollo-boost';
-import {useMutation} from '@apollo/client';
+import {useLazyQuery, useMutation, useQuery} from '@apollo/client';
+import {getDeviceId, usePowerState} from 'react-native-device-info';
+import {Card} from 'react-native-elements';
 
 const LOGOUT = gql`
-  mutation logout($input: NotificationInputType!) {
-    logout(input: $input)
+  mutation logoutAll($input: NotificationInputType!) {
+    logoutAll(input: $input)
+  }
+`;
+
+const GET_ALL_AVAILABLE_SESSION = gql`
+  query getAvailableSessions($input: GetAllSessionsInput!) {
+    getAvailableSessions(input: $input) {
+      id
+      device_id
+      UserSession {
+        id
+        session_id
+      }
+    }
   }
 `;
 
 export default function Dashboard(props: any) {
   const [logoutDevice, logoutDeviceResponse] = useMutation(LOGOUT);
+  const [getAllAvailableSession, getAllAvailableSessionResponse] = useLazyQuery(
+    GET_ALL_AVAILABLE_SESSION,
+  );
 
   useEffect(() => {
     if (logoutDeviceResponse?.data) {
@@ -25,6 +43,27 @@ export default function Dashboard(props: any) {
       logout();
     }
   }, [logoutDeviceResponse?.data]);
+
+  useEffect(() => {
+    (async () => {
+      await getAllAvailableSession({
+        variables: {
+          input: {
+            device_id: await getAsyncDataByKey(LOCAL_DEVICE_ID),
+          },
+        },
+      });
+    })();
+  }, []);
+
+  useEffect(() => {
+    if (getAllAvailableSessionResponse?.data) {
+      console.log(
+        'getAllAvailableSession : ',
+        getAllAvailableSessionResponse?.data,
+      );
+    }
+  }, [getAllAvailableSessionResponse?.data]);
 
   useEffect(() => {
     props.navigation.setOptions({
@@ -62,7 +101,37 @@ export default function Dashboard(props: any) {
   }, []);
 
   return (
-    <View style={{flex: 1, justifyContent: 'center', alignItems: 'center'}}>
+    <View
+      style={{flex: 1, justifyContent: 'space-around', alignItems: 'center'}}>
+      {!getAllAvailableSessionResponse?.loading && (
+        <View>
+          {getAllAvailableSessionResponse?.data?.getAvailableSessions?.UserSession.map(
+            (session: any) => {
+              return (
+                <Text style={{color:"black"}} > 
+                  {session?.session_id}
+                </Text>
+                // <SafeAreaView>
+                //   <View>
+                //     <Card>
+                //       {/*react-native-elements Card*/}
+                //       <Text style={styles.paragraph}>
+                //           {session?.session_id}
+                //       </Text>
+                //     </Card>
+                //   </View>
+                // </SafeAreaView>
+                // <Card title="Local Modules">
+                //   {/*react-native-elements Card*/}
+                //   <Text style={{color: "black"}}>
+                //     {session.session_id}
+                //   </Text>
+                // </Card>
+              );
+            },
+          )}
+        </View>
+      )}
       <Icon.Button
         name="logout"
         color={'black'}
@@ -89,8 +158,15 @@ export default function Dashboard(props: any) {
           });
         }}
         backgroundColor="#014EDE">
-        <Text style={{color: '#ffffff'}}>Logout</Text>
+        <Text style={{color: '#ffffff'}}>Logout From All Device</Text>
       </Icon.Button>
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  paragraph: {
+    fontWeight: 'bold',
+    color: '#34495e',
+  },
+});
