@@ -22,7 +22,6 @@
     "react": "18.1.0",
     "lottie-react-native": "^5.1.4",
     "react-native": "0.70.6",
-    "react-native-android-notification-listener": "^5.0.0",
     "react-native-camera": "^4.2.1",
     "react-native-device-info": "^10.3.0",
     "react-native-elements": "^3.4.2",

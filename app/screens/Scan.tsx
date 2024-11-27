@@ -1,10 +1,8 @@
 import {gql, useMutation, useQuery, useSubscription} from '@apollo/client';
 import React, {useEffect, useState} from 'react';
 import {Text, ToastAndroid, View} from 'react-native';
-import RNAndroidNotificationListener from 'react-native-android-notification-listener';
 import DeviceInfo from 'react-native-device-info';
 import {Scanner} from '../components/Scanner';
-import {startListener} from '../Notification';
 import {
   getAsyncDataByKey,
   LOCAL_DEVICE_ID,
@@ -37,7 +35,7 @@ const CREATE_NOTIFICATION = gql`
   }
 `;
 
-type InputType = {
+export type InputType = {
   input: {
     device_id: string;
     source: string;
@@ -48,7 +46,7 @@ type InputType = {
   };
 };
 
-type NotificationOutputType = {
+export type NotificationOutputType = {
   id: number;
   user_id: number;
   source: string;
@@ -60,7 +58,7 @@ type NotificationOutputType = {
   updatedAt: string;
 };
 
-type SessionInputProps = {
+export type SessionInputProps = {
   input: {
     device_info: String;
     device_name: String;
@@ -73,31 +71,13 @@ export default function Scan(props: any) {
     any,
     SessionInputProps
   >(CREATE_SESSION);
-  const [notification, setNotification] = useState<any>({});
   const [createNotification, createNotificationResponse] = useMutation<
     NotificationOutputType,
     InputType
   >(CREATE_NOTIFICATION);
   const testQuery = useQuery(test);
-  useEffect(() => {
-    (async () => {
-      const permission =
-        await RNAndroidNotificationListener.getPermissionStatus();
-      if (permission != 'authorized') {
-        RNAndroidNotificationListener.requestPermission();
-      }
-      console.log(
-        'Status : ',
-        await RNAndroidNotificationListener.getPermissionStatus(),
-      );
-    })();
-  }, []);
+  
 
-  // useEffect(() => {
-  //   if (notificationListener.data) {
-  //     console.log('notificationListener.data : ', notificationListener.data);
-  //   }
-  // }, [notificationListener.data]);
 
   useEffect(() => {
     if (createSessionResponse?.error) {
@@ -107,48 +87,6 @@ export default function Scan(props: any) {
       );
     }
   }, [createSessionResponse?.error]);
-
-  useEffect(() => {
-    // console.log('Notification Received', notification);
-
-    if (typeof notification == 'string') {
-      let notify: any = JSON.parse(notification);
-      (async () => {
-        console.log(
-          'test : ',
-          JSON.stringify({
-            input: {
-              device_id: DeviceInfo.getUniqueId(),
-              // mainTitle: notify?.titleBig,
-              // notificationData: JSON.stringify(notify),
-              title: notify.title,
-              // source: notify?.app,
-              notificationReceivedTime: new Date(notify?.time * 1000),
-            },
-          }),
-        );
-        await createNotification({
-          variables: {
-            input: {
-              device_id: await DeviceInfo.getUniqueId(),
-              mainTitle: notify?.titleBig,
-              notificationData: JSON.stringify(notify),
-              title: notify.title,
-              source: notify?.app,
-              notificationReceivedTime: new Date(),
-            },
-          },
-        })
-          .then(res => {
-            console.log('Respose : ', res);
-          })
-          .catch(err => {
-            console.log('Error:', err);
-          });
-      })();
-      console.log('Notification Received', notify?.app);
-    }
-  }, [notification]);
 
   useEffect(() => {
     if (testQuery.data) {
@@ -216,7 +154,6 @@ export default function Scan(props: any) {
                 LOCAL_SESSION_IDS,
                 JSON.stringify(existingSessionArray),
               );
-              startListener(setNotification);
               props.navigation.navigate('Dashboard');
             })
             .catch(err => {

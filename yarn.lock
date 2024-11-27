@@ -6041,11 +6041,6 @@ react-is@^17.0.1:
   resolved "https://registry.yarnpkg.com/react-is/-/react-is-17.0.2.tgz#e691d4a8e9c789365655539ab372762b0efb54f0"
   integrity sha512-w2GsyukL62IJnlaff/nRegPQR94C/XXamvMWmSHRJ4y7Ts/4ocGRmTHvOs8PSE6pB3dWOrD/nueuU5sduBsQ4w==
 
-react-native-android-notification-listener@^5.0.0:
-  version "5.0.0"
-  resolved "https://registry.yarnpkg.com/react-native-android-notification-listener/-/react-native-android-notification-listener-5.0.0.tgz#5fc40ced67bbac5319070de97addb120e2eebac8"
-  integrity sha512-d5tHHhncWz1at7aUfJI4JR7bVPdqw9pnXNelBT+32JrQL6wrL6tVlczF14e/EnDcJXWq6t7nK5yloZFIPQY8Ww==
-
 react-native-camera@^4.2.1:
   version "4.2.1"
   resolved "https://registry.yarnpkg.com/react-native-camera/-/react-native-camera-4.2.1.tgz#caf74081f055e89d7e9b0cd5108965d808c60e90"
